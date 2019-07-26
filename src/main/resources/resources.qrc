@@ -1,0 +1,9 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>base/x42logo.png</file>
+    <file>base/x42logo_send.png</file>
+    <file>base/x42logo_dashboard.png</file>
+    <file>base/x42poster_darkened.jpg</file>
+    <file>base/Roboto-Regular.ttf</file>
+</qresource>
+</RCC>

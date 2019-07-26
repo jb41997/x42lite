@@ -1,0 +1,12 @@
+altgraph==0.16.1
+certifi==2019.6.16
+chardet==3.0.4
+fbs==0.8.3
+idna==2.8
+macholib==1.11
+PyInstaller==3.5
+PySide2==5.12.3
+requests==2.22.0
+requests-futures==1.0.0
+shiboken2==5.12.3
+urllib3==1.25.3

@@ -1,0 +1,4 @@
+{
+	"freeze_dir": "target/${app_name}.app",
+    "mac_bundle_identifier": ""
+}
