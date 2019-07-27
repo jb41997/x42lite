@@ -219,8 +219,8 @@ if __name__ == '__main__':
 		addressArea.setHtml(doc)
 		balanceArea.setFixedHeight(balanceArea.document().size().height()+5)
 		addressArea.setFixedHeight(balanceArea.document().size().height()+5)
-		#addressArea.setFixedSize(addressArea.document().size().width()+20, balanceArea.document().size().height()+5)
-
+		addressArea.setFixedWidth(addressArea.document().size().width()+20)
+		
 	#Grab staking info
 	@Slot()
 	def displayStaking(doc):
@@ -411,7 +411,7 @@ if __name__ == '__main__':
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
-	stackedWidget.setStyleSheet("QStackedWidget {background-image: url(:/base/x42poster_darkened.jpg);} QComboBox {background-color: #222222;} QLineEdit {background-color: #222222; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: #222222; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:#222222; border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+	stackedWidget.setStyleSheet("QStackedWidget {background-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QComboBox {background-color: #222222;} QLineEdit {background-color: #222222; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: #222222; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:#222222; border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 	mainWin.addWidget(stackedWidget)
 	
 	#Dashboard Page
