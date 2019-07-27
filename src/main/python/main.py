@@ -218,7 +218,8 @@ if __name__ == '__main__':
 	def displayAddressInfo(doc):
 		addressArea.setHtml(doc)
 		balanceArea.setFixedHeight(balanceArea.document().size().height()+5)
-		addressArea.setFixedSize(addressArea.document().size().width()+5, balanceArea.document().size().height()+5)
+		addressArea.setFixedHeight(balanceArea.document().size().height()+5)
+		#addressArea.setFixedSize(addressArea.document().size().width()+20, balanceArea.document().size().height()+5)
 
 	#Grab staking info
 	@Slot()
@@ -331,9 +332,41 @@ if __name__ == '__main__':
 		startSpin()
 		transactionSig.objSig.emit(buildTxParams)
 
+	class QHLine(QFrame):
+		def __init__(self, parent=None, color=QColor("black")):
+			super(QHLine, self).__init__(parent)
+			self.setFrameShape(QFrame.HLine)
+			self.setFrameShadow(QFrame.Plain)
+			self.setLineWidth(0)
+			self.setMidLineWidth(3)
+			self.setContentsMargins(0, 0, 0, 0)
+			self.setColor(color)
+
+		def setColor(self, color):
+			pal = self.palette()
+			pal.setColor(QPalette.WindowText, color)
+			self.setPalette(pal)
+
 	#Application Setup
 	appctxt=ApplicationContext()
 	app =appctxt.app
+
+	# Now use a palette to switch to dark colors:
+	palette = QPalette()
+	palette.setColor(QPalette.Window, QColor(34, 34, 34))
+	palette.setColor(QPalette.WindowText, Qt.white)
+	palette.setColor(QPalette.Base, QColor(25, 25, 25))
+	palette.setColor(QPalette.AlternateBase, QColor(34, 34, 34))
+	palette.setColor(QPalette.ToolTipBase, Qt.white)
+	palette.setColor(QPalette.ToolTipText, Qt.white)
+	palette.setColor(QPalette.Text, Qt.white)
+	palette.setColor(QPalette.Button, QColor(34, 34, 34))
+	palette.setColor(QPalette.ButtonText, Qt.white)
+	palette.setColor(QPalette.BrightText, Qt.red)
+	palette.setColor(QPalette.Link, QColor(42, 130, 218))
+	palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
+	palette.setColor(QPalette.HighlightedText, Qt.black)
+	app.setPalette(palette)
 
 	#Swagger Api settings
 	xConfig=configparser.ConfigParser()
@@ -378,7 +411,7 @@ if __name__ == '__main__':
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
-	stackedWidget.setStyleSheet("QStackedWidget {background-image: url(:/base/x42poster_darkened.jpg)} QPushButton {background-color: #4717F6}" )
+	stackedWidget.setStyleSheet("QStackedWidget {background-image: url(:/base/x42poster_darkened.jpg);} QComboBox {background-color: #222222;} QLineEdit {background-color: #222222; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: #222222; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:#222222; border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 	mainWin.addWidget(stackedWidget)
 	
 	#Dashboard Page
@@ -395,7 +428,6 @@ if __name__ == '__main__':
 	addressArea.setReadOnly(1)
 	addressArea.setLineWrapMode(QTextEdit.NoWrap)
 	addressArea.setAcceptRichText(1)
-	addressArea.setAlignment(Qt.AlignRight)
 	historyLabel=QLabel()
 	balanceLabel=QLabel()
 	addressLabel=QLabel()
@@ -434,6 +466,8 @@ if __name__ == '__main__':
 	refreshWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
 	clearWalletButton=QPushButton("Cancel")
 	clearWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	hLine=QHLine()
+	hLine.setColor(QColor(71,23,246))
 	vDashboardLayout = QVBoxLayout()
 	hFooterLayout=QHBoxLayout()
 	hFooterLayout.addWidget(stakingLabel)
@@ -444,11 +478,15 @@ if __name__ == '__main__':
 	hBalanceLayout.addWidget(balanceLabel)
 	hBalanceLayout.addStretch(1)
 	vBalanceLayout=QVBoxLayout()
+	vBalanceLayout.addStretch(1)
 	vBalanceLayout.addLayout(hBalanceLayout)
 	vBalanceLayout.addWidget(balanceArea)
+	vBalanceLayout.addStretch(1)
 	vAddressLayout=QVBoxLayout()
+	vAddressLayout.addStretch(1)
 	vAddressLayout.addWidget(addressLabel)
 	vAddressLayout.addWidget(addressArea)
+	vAddressLayout.addStretch(1)
 	hMidLayout=QHBoxLayout()
 	hMidLayout.addLayout(vBalanceLayout)
 	hMidLayout.addLayout(vAddressLayout)
@@ -457,6 +495,7 @@ if __name__ == '__main__':
 	hHeaderLayout.addWidget(logoLabel)
 	vDashboardLayout.addLayout(hHeaderLayout)
 	vDashboardLayout.addLayout(hMidLayout)
+	vDashboardLayout.addWidget(hLine)
 	vDashboardLayout.addWidget(historyLabel)
 	vDashboardLayout.addWidget(walletHistoryArea)
 	vDashboardLayout.addLayout(hFooterLayout)
@@ -466,6 +505,7 @@ if __name__ == '__main__':
 	dashboardPage.setLayout(vDashboardLayout)
 
 	#wallet select page
+	hWalletFormLayout=QHBoxLayout()
 	walletFormLayout=QFormLayout()
 	vWalletLayout=QVBoxLayout()
 	vWalletFormButtonsLayout=QHBoxLayout()
@@ -477,16 +517,24 @@ if __name__ == '__main__':
 	vWalletFormButtonsLayout.setAlignment(Qt.AlignTop)
 	selectWalletName=QComboBox()
 	selectWalletName.setFixedWidth(200)
+	selectWalletName.setEditable(True)
+	selectWalletName.lineEdit().setReadOnly(True)
+	selectWalletName.lineEdit().setAlignment(Qt.AlignCenter)
 	hWalletHeaderLayout=QHBoxLayout()
 	hWalletHeaderLayout.addWidget(walletLogoLabel)
 	walletFormLayout.addRow(walletFormLayout.tr("&Choose Wallet:"),selectWalletName)
+	hWalletFormLayout.addStretch(1)
+	hWalletFormLayout.addLayout(walletFormLayout)
+	hWalletFormLayout.addStretch(1)
+	hWalletFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
 	hWalletHeaderLayout.setAlignment(Qt.AlignTop)
 	vWalletLayout.addLayout(hWalletHeaderLayout)
-	vWalletLayout.addLayout(walletFormLayout)
+	vWalletLayout.addLayout(hWalletFormLayout)
 	vWalletLayout.addLayout(vWalletFormButtonsLayout)
 	walletPage.setLayout(vWalletLayout)
 
 	#Send page 
+	hSendFormLayout=QHBoxLayout()
 	sendFormLayout=QFormLayout()
 	vSendLayout=QVBoxLayout()
 	vFormButtonsLayout=QHBoxLayout()
@@ -514,9 +562,13 @@ if __name__ == '__main__':
 	sendFormLayout.addRow(sendFormLayout.tr("&Amount to send:"),sendWalletAmount)
 	sendFormLayout.addRow(sendFormLayout.tr("&Recipient Address:"),sendRecipient)
 	sendFormLayout.addRow(sendFormLayout.tr("&Wallet Password:"),sendWalletPassword)
+	hSendFormLayout.addStretch(1)
+	hSendFormLayout.addLayout(sendFormLayout)
+	hSendFormLayout.addStretch(1)
+	hSendFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
 	hSendHeaderLayout.setAlignment(Qt.AlignTop)
 	vSendLayout.addLayout(hSendHeaderLayout)
-	vSendLayout.addLayout(sendFormLayout)
+	vSendLayout.addLayout(hSendFormLayout)
 	vSendLayout.addLayout(vFormButtonsLayout)
 	sendPage.setLayout(vSendLayout)
 	msgBox=QMessageBox()
