@@ -411,7 +411,7 @@ if __name__ == '__main__':
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
-	stackedWidget.setStyleSheet("QStackedWidget {background-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QComboBox {background-color: #222222;} QLineEdit {background-color: #222222; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: #222222; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:#222222; border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+	stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QComboBox {background-color: #222222;} QLineEdit {background-color: #222222; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: #222222; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:#222222; border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 	mainWin.addWidget(stackedWidget)
 	
 	#Dashboard Page
