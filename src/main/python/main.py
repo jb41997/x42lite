@@ -571,7 +571,7 @@ if __name__ == '__main__':
 	vSendLayout.addLayout(hSendFormLayout)
 	vSendLayout.addLayout(vFormButtonsLayout)
 	sendPage.setLayout(vSendLayout)
-	msgBox=QMessageBox()
+	msgBox=QMessageBox(parent=mainWin)
 	mainWin.setFixedSize(geom.width()*.5, geom.height() *.6)
 	mainWin.show()
 
