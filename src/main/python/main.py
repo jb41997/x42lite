@@ -411,7 +411,7 @@ if __name__ == '__main__':
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
-	stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QComboBox {background-color: rgba(34, 34, 34, 1.0);} QLineEdit {background-color: rgba(34, 34, 34, 0.8); border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+	stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QMessageBox,QComboBox {background-color: rgba(34, 34, 34, 1.0);} QLineEdit {background-color: rgba(34, 34, 34, 0.8); border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 	mainWin.addWidget(stackedWidget)
 	
 	#Dashboard Page
