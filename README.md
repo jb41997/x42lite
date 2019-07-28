@@ -2,9 +2,9 @@
 
 This was initially developed to offer a quick dashboard view for a headless node running on your network.  For instance, if you are running a full-node on resource limited hardware (such as a raspberry pi) this dashboard will allow you to view the status of that node from another machine.  In its current form, this UI assumes you already have an x42-node up and running somewhere on your network.  If you need assistance setting up a node, reference the following links.
 
-[Official X42](https://github.com/x42protocol/X42-FullNode)
-[Headless setup](https://www.reddit.com/r/x42/comments/akp6lp/creating_a_headless_staking_node_on_ubuntu_1804/?utm_source=share&utm_medium=web2x)
-[Full-Node on RaspPi setup](https://www.reddit.com/r/x42/comments/catbin/raspberry_pi_3_build/?utm_source=share&utm_medium=web2x)
+  *[Official X42](https://github.com/x42protocol/X42-FullNode)
+  *[Headless setup](https://www.reddit.com/r/x42/comments/akp6lp/creating_a_headless_staking_node_on_ubuntu_1804/?utm_source=share&utm_medium=web2x)
+  *[Full-Node on RaspPi setup](https://www.reddit.com/r/x42/comments/catbin/raspberry_pi_3_build/?utm_source=share&utm_medium=web2x)
 
 This project was developed using python v3.7.4 and PySide2 v5.12.3.  Built/packaged with [fbs](https://build-system.fman.io/manual/).
 
@@ -77,6 +77,6 @@ Now you should be able to issue ```fbs run``` with success.
 (If x42lite is still having problems connecting to your node, you may need to adjust firewall settings etc.)
 
 
-### Currently in Beta.  Feel free to submit an issue for bugs and suggestions.
+### x42lite is currently in Beta pending interest from the community.  Feel free to submit an issue for bugs and suggestions.
 
 
