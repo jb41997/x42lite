@@ -9,6 +9,10 @@ This was initially developed to offer a quick dashboard view for a headless node
 This project was developed using python v3.7.4 and PySide2 v5.12.3.  Built/packaged with [fbs](https://build-system.fman.io/manual/).
 
 
+### To Install
+Simply download the appropriate installer for your platform from the [installers](https://github.com/jb41997/x42lite/tree/master/installers) directory.
+
+
 ### To compile from source:
 
 First install python 3 if you haven't already.  (Version 3.5,3.6, or 3.7 should work)
