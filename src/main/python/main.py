@@ -9,7 +9,7 @@ from waitingspinnerwidget import QtWaitingSpinner
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-import sys,os,json,requests,resources,configparser,time
+import sys,os,json,requests,resources,configparser,time,textwrap
 
 if __name__ == '__main__':
 
@@ -28,7 +28,7 @@ if __name__ == '__main__':
 						wallets.append(wallet.split(".")[0])
 					grabWalletSig.objSig.emit(wallets)
 			except requests.exceptions.RequestException as e:
-				displayErrorSig.objSig.emit(["Network Error",e])
+				displayErrorSig.objSig.emit(["No Wallet Files Found at Host IP: "+swagIP+".  Check IP Setting.",e])
 				wallets.append("No Wallets")
 				grabWalletSig.objSig.emit(wallets)
 
@@ -177,14 +177,30 @@ if __name__ == '__main__':
 			except requests.exceptions.RequestException as e:
 				displayErrorSig.objSig.emit(["Network Error",e])
 
+	class QHLine(QFrame):
+		def __init__(self, parent=None, color=QColor("black")):
+			super(QHLine, self).__init__(parent)
+			self.setFrameShape(QFrame.HLine)
+			self.setFrameShadow(QFrame.Plain)
+			self.setLineWidth(0)
+			self.setMidLineWidth(3)
+			self.setContentsMargins(0, 0, 0, 0)
+			self.setColor(color)
+
+		def setColor(self, color):
+			pal = self.palette()
+			pal.setColor(QPalette.WindowText, color)
+			self.setPalette(pal)
+
 
 	#Main thread functions
 	@Slot()
 	def displayError(resp):
 		responseCode=resp[0]
 		response=resp[1]
-		msgBox.setText("There was an error!")
-		msgBox.setInformativeText("Json request error "+str(responseCode))
+		message="There was an error!\n\n{}".format("\n".join(textwrap.wrap(str(responseCode),width=55)))
+		msgBox.setText(message)
+		#msgBox.setInformativeText("Error: "+str(responseCode))
 		msgBox.setDetailedText(str(response))
 		msgBox.exec_()
 		stopSpin()
@@ -257,11 +273,17 @@ if __name__ == '__main__':
 			addressArea.setTextCursor(addrCursor)
 			app.clipboard().setText(copiedAddr)
 
+	def switchToSettingsPage():
+		stackedWidget.setCurrentIndex(3)
+
 	def switchToSendPage():
 		stackedWidget.setCurrentIndex(2)
 
 	def switchToDashboardPage():
 		stackedWidget.setCurrentIndex(1)
+
+	def switchToWalletPage():
+		stackedWidget.setCurrentIndex(0)
 
 	def clearForm():
 		sendWalletAmount.clear()
@@ -332,20 +354,43 @@ if __name__ == '__main__':
 		startSpin()
 		transactionSig.objSig.emit(buildTxParams)
 
-	class QHLine(QFrame):
-		def __init__(self, parent=None, color=QColor("black")):
-			super(QHLine, self).__init__(parent)
-			self.setFrameShape(QFrame.HLine)
-			self.setFrameShadow(QFrame.Plain)
-			self.setLineWidth(0)
-			self.setMidLineWidth(3)
-			self.setContentsMargins(0, 0, 0, 0)
-			self.setColor(color)
+	def rebuildURLs(sIP):
+		global swagIP
+		global swaggerServer
+		global walletHistoryURL
+		global balanceURL
+		global stakingURL
+		global addressURL
+		global walletURL
+		global buildTxURL
+		global sendTxURL
 
-		def setColor(self, color):
-			pal = self.palette()
-			pal.setColor(QPalette.WindowText, color)
-			self.setPalette(pal)
+		swagIP=sIP
+		swaggerServer = "http://"+swagIP
+		walletHistoryURL=swaggerServer+historyEndpoint
+		balanceURL=swaggerServer+balanceEndpoint
+		stakingURL=swaggerServer+stakingEndpoint
+		addressURL=swaggerServer+addressEndpoint
+		walletURL=swaggerServer+walletEndpoint
+		buildTxURL=swaggerServer+buildTxEndpoint
+		sendTxURL=swaggerServer+sendTxEndpoint
+		switchToWalletPage()
+		initWallets()
+
+	def updateSettings():
+		xConfig.set('SETTINGS','NODE_HOST',hostSetting.text())
+		xConfig.set('SETTINGS','REFRESH_INTERVAL',refreshSetting.text())
+
+		with open(appctxt.get_resource('x42lite.ini'),'w') as configfile:
+			xConfig.write(configfile)
+		configfile.close()
+
+		secToRefresh=int(xConfig['SETTINGS']['REFRESH_INTERVAL'])
+		rebuildURLs(str(xConfig['SETTINGS']['NODE_HOST']))
+
+	def setDefaultSettings():
+		hostSetting.setText("127.0.0.1:42220")
+		refreshSetting.setText("900")
 
 	#Application Setup
 	appctxt=ApplicationContext()
@@ -370,9 +415,9 @@ if __name__ == '__main__':
 
 	#Swagger Api settings
 	xConfig=configparser.ConfigParser()
-	#xConfig.read(os.path.join(os.path.abspath(os.path.dirname(__file__)), 'x42lite.ini'))
 	xConfig.read(appctxt.get_resource('x42lite.ini'))
-	swaggerServer = "http://"+str(xConfig['HOST']['NODE_HOST'])
+	swagIP=str(xConfig['SETTINGS']['NODE_HOST'])
+	swaggerServer = "http://"+swagIP
 	historyEndpoint = '/api/Wallet/history'
 	balanceEndpoint = '/api/Wallet/balance'
 	stakingEndpoint = '/api/Staking/getstakinginfo'
@@ -387,17 +432,18 @@ if __name__ == '__main__':
 	walletURL=swaggerServer+walletEndpoint
 	buildTxURL=swaggerServer+buildTxEndpoint
 	sendTxURL=swaggerServer+sendTxEndpoint
+
 	apiSession = requests.session()
 	futuresSession=FuturesSession()
 
-	retryCount=Retry(total=5,backoff_factor=0.1,status_forcelist=(400, 500, 502, 504))
+	retryCount=Retry(total=3,backoff_factor=0.1,status_forcelist=(400, 500, 502, 504))
 	apiSession.mount('http://', HTTPAdapter(max_retries=retryCount))
 	apiSession.mount('https://', HTTPAdapter(max_retries=retryCount))
 	futuresSession.mount('http://', HTTPAdapter(max_retries=retryCount))
 	futuresSession.mount('https://', HTTPAdapter(max_retries=retryCount))
 
 	#refresh interval
-	secToRefresh=int(xConfig['HOST']['REFRESH_INTERVAL'])
+	secToRefresh=int(xConfig['SETTINGS']['REFRESH_INTERVAL'])
 	secCounter=0
 	
 	#GUI	
@@ -407,10 +453,12 @@ if __name__ == '__main__':
 	walletPage=QWidget()
 	dashboardPage=QWidget()
 	sendPage=QWidget()
+	settingsPage=QWidget()
 	stackedWidget=QStackedWidget()
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
+	stackedWidget.addWidget(settingsPage)
 	stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QMessageBox,QComboBox {background-color: rgba(34, 34, 34, 1.0);} QLineEdit {background-color: rgba(34, 34, 34, 0.8); border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 	mainWin.addWidget(stackedWidget)
 	
@@ -434,38 +482,30 @@ if __name__ == '__main__':
 	stakingLabel=QLabel()
 	logoLabel=QLabel()
 	sendLogoLabel=QLabel()
+	settingsLogoLabel=QLabel()
 	walletLogoLabel=QLabel()
 	autoLabel=QLabel()
 	autoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	xImage=QPixmap(":/base/x42logo.png")
 	xSendIcon=QIcon(":/base/x42logo_send.png")
 	xDashboardIcon=QIcon(":/base/x42logo_dashboard.png")
+	xSettingsIcon=QIcon(":/base/cog.png")
 	logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 	logoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 	sendLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
+	settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+	settingsLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 	walletLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	refreshButton=QPushButton("Refresh")
-	refreshButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	refreshButton.setStyleSheet("max-width: 45px; max-height: 30px;")
 	sendButton=QPushButton()
 	sendButton.setStyleSheet("min-width: 80px; max-height: 30px;")
 	sendButton.setIcon(xSendIcon)
 	sendButton.setIconSize(QSize(80,21))
-	dashboardButton=QPushButton()
-	dashboardButton.setStyleSheet("min-width: 80px; max-height: 30px;")
-	dashboardButton.setIcon(xDashboardIcon)
-	dashboardButton.setIconSize(QSize(155,26))
-	submitButton=QPushButton("Submit")
-	submitButton.setStyleSheet("max-width: 80px; max-height: 30px;")
-	clearButton=QPushButton("Clear")
-	clearButton.setStyleSheet("max-width: 80px; max-height: 30px;")
-	submitWalletButton=QPushButton("GO!")
-	submitWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
-	refreshWalletButton=QPushButton("Refresh")
-	refreshWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
-	clearWalletButton=QPushButton("Cancel")
-	clearWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	homeButton=QPushButton("Home")
+	homeButton.setStyleSheet("max-width: 45px; max-height: 30px;")
 	hLine=QHLine()
 	hLine.setColor(QColor(71,23,246))
 	vDashboardLayout = QVBoxLayout()
@@ -474,6 +514,7 @@ if __name__ == '__main__':
 	hFooterLayout.addStretch(1)
 	hFooterLayout.addWidget(autoLabel)
 	hFooterLayout.addWidget(refreshButton)
+	hFooterLayout.addWidget(homeButton)
 	hBalanceLayout=QHBoxLayout()
 	hBalanceLayout.addWidget(balanceLabel)
 	hBalanceLayout.addStretch(1)
@@ -505,11 +546,23 @@ if __name__ == '__main__':
 	dashboardPage.setLayout(vDashboardLayout)
 
 	#wallet select page
+	submitWalletButton=QPushButton("GO!")
+	submitWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	refreshWalletButton=QPushButton("Refresh")
+	refreshWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	clearWalletButton=QPushButton("Close")
+	clearWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	settingsButton=QPushButton()
+	#settingsButton.setFlat(1)
+	settingsButton.setIcon(xSettingsIcon)
+	settingsButton.setIconSize(QSize(15,15))
+	settingsButton.setStyleSheet("max-width: 80px; max-height: 30px;")
 	hWalletFormLayout=QHBoxLayout()
 	walletFormLayout=QFormLayout()
 	vWalletLayout=QVBoxLayout()
 	vWalletFormButtonsLayout=QHBoxLayout()
 	vWalletFormButtonsLayout.addStretch(1)
+	vWalletFormButtonsLayout.addWidget(settingsButton)
 	vWalletFormButtonsLayout.addWidget(refreshWalletButton)
 	vWalletFormButtonsLayout.addWidget(clearWalletButton)
 	vWalletFormButtonsLayout.addWidget(submitWalletButton)
@@ -533,16 +586,62 @@ if __name__ == '__main__':
 	vWalletLayout.addLayout(vWalletFormButtonsLayout)
 	walletPage.setLayout(vWalletLayout)
 
+	#Settings Page
+	saveSettingsButton=QPushButton("Save")
+	saveSettingsButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	cancelSettingsButton=QPushButton("Cancel")
+	cancelSettingsButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	defaultSettingsButton=QPushButton("Defaults")
+	defaultSettingsButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	hSettingsFormLayout=QHBoxLayout()
+	vSettingsLayout=QVBoxLayout()
+	settingsFormLayout=QFormLayout()
+	hSettingsHeaderLayout=QHBoxLayout()
+	hSettingsButtonsLayout=QHBoxLayout()
+	hSettingsButtonsLayout.addStretch(1)
+	hSettingsButtonsLayout.addWidget(cancelSettingsButton)
+	hSettingsButtonsLayout.addWidget(defaultSettingsButton)
+	hSettingsButtonsLayout.addWidget(saveSettingsButton)
+	hSettingsButtonsLayout.addStretch(1)
+	hSettingsButtonsLayout.setAlignment(Qt.AlignTop)
+	hSettingsHeaderLayout.addStretch(1)
+	hSettingsHeaderLayout.addWidget(settingsLogoLabel)
+	hSettingsHeaderLayout.setAlignment(Qt.AlignTop)
+	hostSetting=QLineEdit()
+	hostSetting.setFixedWidth(200)
+	hostSetting.setText(swagIP)
+	refreshSetting=QLineEdit()
+	refreshSetting.setFixedWidth(200)
+	refreshSetting.setText(str(secToRefresh))
+	settingsFormLayout.addRow(settingsFormLayout.tr("&Node Address <font color='#979a9a'><small>(IP and Port)</small></font>: "),hostSetting)
+	settingsFormLayout.addRow(settingsFormLayout.tr("&Auto Refresh Timer <font color='#979a9a'><small>(In Seconds)</small></font>: "),refreshSetting)
+	hSettingsFormLayout.addStretch(1)
+	hSettingsFormLayout.addLayout(settingsFormLayout)
+	hSettingsFormLayout.addStretch(1)
+	hSettingsFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+	vSettingsLayout.addLayout(hSettingsHeaderLayout)
+	vSettingsLayout.addLayout(hSettingsFormLayout)
+	vSettingsLayout.addLayout(hSettingsButtonsLayout)
+	settingsPage.setLayout(vSettingsLayout)
+
 	#Send page 
+	dashboardButton=QPushButton()
+	dashboardButton.setStyleSheet("min-width: 80px; max-height: 30px;")
+	dashboardButton.setIcon(xDashboardIcon)
+	dashboardButton.setIconSize(QSize(155,26))
+	submitButton=QPushButton("Submit")
+	submitButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	clearButton=QPushButton("Clear")
+	clearButton.setStyleSheet("max-width: 80px; max-height: 30px;")
 	hSendFormLayout=QHBoxLayout()
 	sendFormLayout=QFormLayout()
 	vSendLayout=QVBoxLayout()
-	vFormButtonsLayout=QHBoxLayout()
-	vFormButtonsLayout.addStretch(1)
-	vFormButtonsLayout.addWidget(clearButton)
-	vFormButtonsLayout.addWidget(submitButton)
-	vFormButtonsLayout.addStretch(1)
-	vFormButtonsLayout.setAlignment(Qt.AlignTop)
+	hFormButtonsLayout=QHBoxLayout()
+	hFormButtonsLayout.addStretch(1)
+	hFormButtonsLayout.addWidget(clearButton)
+	hFormButtonsLayout.addWidget(submitButton)
+	hFormButtonsLayout.addStretch(1)
+	hFormButtonsLayout.setAlignment(Qt.AlignTop)
 	sendWalletAmount=QLineEdit()
 	sendWalletAmount.setFixedWidth(350)
 	sendAmountValidator=QDoubleValidator()
@@ -559,6 +658,7 @@ if __name__ == '__main__':
 	hSendHeaderLayout=QHBoxLayout()
 	hSendHeaderLayout.addWidget(dashboardButton)
 	hSendHeaderLayout.addWidget(sendLogoLabel)
+	hSendHeaderLayout.setAlignment(Qt.AlignTop)
 	sendFormLayout.addRow(sendFormLayout.tr("&Amount to send:"),sendWalletAmount)
 	sendFormLayout.addRow(sendFormLayout.tr("&Recipient Address:"),sendRecipient)
 	sendFormLayout.addRow(sendFormLayout.tr("&Wallet Password:"),sendWalletPassword)
@@ -566,11 +666,11 @@ if __name__ == '__main__':
 	hSendFormLayout.addLayout(sendFormLayout)
 	hSendFormLayout.addStretch(1)
 	hSendFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
-	hSendHeaderLayout.setAlignment(Qt.AlignTop)
 	vSendLayout.addLayout(hSendHeaderLayout)
 	vSendLayout.addLayout(hSendFormLayout)
-	vSendLayout.addLayout(vFormButtonsLayout)
+	vSendLayout.addLayout(hFormButtonsLayout)
 	sendPage.setLayout(vSendLayout)
+
 	msgBox=QMessageBox(parent=stackedWidget)
 	mainWin.setFixedSize(geom.width()*.5, geom.height() *.6)
 	mainWin.show()
@@ -625,6 +725,10 @@ if __name__ == '__main__':
 	refreshTimer.timeout.connect(updateTimer)
 	refreshTimer.start(1000)
 
+	settingsButton.clicked.connect(switchToSettingsPage)
+	defaultSettingsButton.clicked.connect(setDefaultSettings)
+	cancelSettingsButton.clicked.connect(switchToWalletPage)
+	saveSettingsButton.clicked.connect(updateSettings)
 	refreshButton.clicked.connect(clearDash)
 	sendButton.clicked.connect(switchToSendPage)
 	clearButton.clicked.connect(clearForm)
@@ -632,6 +736,7 @@ if __name__ == '__main__':
 	dashboardButton.clicked.connect(switchToDashboardPage)
 	submitWalletButton.clicked.connect(chooseWallet)
 	refreshWalletButton.clicked.connect(initWallets)
+	homeButton.clicked.connect(switchToWalletPage)
 	clearWalletButton.clicked.connect(closeApp)
 	addressArea.mouseReleaseEvent=copyAddress
 
