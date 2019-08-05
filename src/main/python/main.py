@@ -9,7 +9,7 @@ from waitingspinnerwidget import QtWaitingSpinner
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
 
-import sys,os,json,requests,resources,configparser,time,textwrap
+import sys,os,platform,shutil,json,requests,resources,configparser,time,textwrap
 
 if __name__ == '__main__':
 
@@ -381,7 +381,7 @@ if __name__ == '__main__':
 		xConfig.set('SETTINGS','NODE_HOST',hostSetting.text())
 		xConfig.set('SETTINGS','REFRESH_INTERVAL',refreshSetting.text())
 
-		with open(appctxt.get_resource('x42lite.ini'),'w') as configfile:
+		with open(configPath,'w') as configfile:
 			xConfig.write(configfile)
 		configfile.close()
 
@@ -413,9 +413,21 @@ if __name__ == '__main__':
 	palette.setColor(QPalette.HighlightedText, Qt.black)
 	app.setPalette(palette)
 
-	#Swagger Api settings
+	#Config seteup and Swagger Api settings
 	xConfig=configparser.ConfigParser()
-	xConfig.read(appctxt.get_resource('x42lite.ini'))
+	sysPlatform=platform.system().upper()
+	baseConfig=appctxt.get_resource('x42lite.ini')
+
+	if sysPlatform == 'WINDOWS':
+		configDir=os.path.join(os.environ['APPDATA'],'x42lite')
+		configPath=os.path.join(configDir,'x42lite.ini')
+		if not os.path.exists(configDir):
+			os.makedirs(configDir)
+			shutil.copyfile(baseConfig,configPath)
+	else:
+		configPath=baseConfig
+		
+	xConfig.read(configPath)
 	swagIP=str(xConfig['SETTINGS']['NODE_HOST'])
 	swaggerServer = "http://"+swagIP
 	historyEndpoint = '/api/Wallet/history'
