@@ -119,7 +119,6 @@ if __name__ == '__main__':
 		def constructStaking(self,data):
 			stakingJson=data[0]
 			stakingRespCode=data[1]
-
 			tempStakingText=""
 			if stakingJson and stakingRespCode==200:
 				if stakingJson["staking"]==True:
@@ -168,8 +167,6 @@ if __name__ == '__main__':
 				addressResult=addressSession.result()
 				historyResult=historySession.result()
 				stakingResult=stakingSession.result()
-				#responseCodes=str(balanceResult.code)+" "+str(stakingResult.code)+" "+str(addressResult.code)+" "+str(historyResult.code)
-				#print(responseCodes)
 				balDocDone.objSig.emit([balanceResult.data,balanceResult.code])
 				stakeDocDone.objSig.emit([stakingResult.data,stakingResult.code])
 				addrDocDone.objSig.emit([addressResult.data, addressResult.code])
@@ -492,6 +489,7 @@ if __name__ == '__main__':
 	balanceLabel=QLabel()
 	addressLabel=QLabel()
 	stakingLabel=QLabel()
+	#stakingLabel.setAlignment(Qt.AlignRight | Qt.AlignBottom)
 	logoLabel=QLabel()
 	sendLogoLabel=QLabel()
 	settingsLogoLabel=QLabel()
@@ -546,10 +544,14 @@ if __name__ == '__main__':
 	hHeaderLayout=QHBoxLayout()
 	hHeaderLayout.addWidget(sendButton)
 	hHeaderLayout.addWidget(logoLabel)
+	hHistoryLabelLayout=QHBoxLayout()
+	hHistoryLabelLayout.addWidget(historyLabel)
+	hHistoryLabelLayout.addStretch(1)
+	#hHistoryLabelLayout.addWidget(stakingLabel)
 	vDashboardLayout.addLayout(hHeaderLayout)
 	vDashboardLayout.addLayout(hMidLayout)
 	vDashboardLayout.addWidget(hLine)
-	vDashboardLayout.addWidget(historyLabel)
+	vDashboardLayout.addLayout(hHistoryLabelLayout)
 	vDashboardLayout.addWidget(walletHistoryArea)
 	vDashboardLayout.addLayout(hFooterLayout)
 	balanceLabel.setText("<h2><font color='#cc147f'>Balances</font></h2>")
