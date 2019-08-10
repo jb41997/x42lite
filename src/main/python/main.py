@@ -71,15 +71,15 @@ if __name__ == '__main__':
 					spendableBalance=balance["spendableAmount"]
 					unconfirmedBalance=balance["amountUnconfirmed"]
 					confirmedBalance=balance["amountConfirmed"]
-				tempBalanceText=("<i>Spendable Balance</i><br>"+
+				tempBalanceText=(cssStyle+"<i>Spendable Balance</i><br>"+
 				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
-				"<font color='#26bfb5'>"+ str(spendableBalance/100000000) + "</font><font color='#cc147f'><small> x42</small></font><br>"+
+				"<font class='amount-text'><b>"+ str(spendableBalance/100000000) + "</b></font><font class='x-text'><small> x42</small></font><br>"+
 				"<i>Confirmed Balance</i><br>"+
 				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
-				"<font color='#26bfb5'>"+ str(confirmedBalance/100000000) + "</font><font color='#cc147f'><small> x42</small></font><br>"+
+				"<font class='amount-text'><b>"+ str(confirmedBalance/100000000) + "</b></font><font class='x-text'><small> x42</small></font><br>"+
 				"<i>Unconfirmed Balance</i><br>"+
 				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
-				"<font color='#26bfb5'>"+ str(unconfirmedBalance/100000000) + "</font><font color='#cc147f'><small> x42</small></font>")
+				"<font class='amount-text'><b>"+ str(unconfirmedBalance/100000000) + "</b></font><font class='x-text'><small> x42</small></font>")
 			balanceDone.strSig.emit(tempBalanceText)
 
 		@Slot()
@@ -106,13 +106,13 @@ if __name__ == '__main__':
 					elif address["isUsed"]==False and isUsedAddr==0:
 						nextUnusedAddr=address["address"]
 						isUsedAddr=1
-				tempAddressText=("<i>Next Unused Address</i><br>"+
+				tempAddressText=(cssStyle+"<i>Next Unused Address</i><br>"+
 				"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+
 				"<small>"+nextUnusedAddr+"</small><br>"+
 				"<br><i>Used Adresses</i><br>")
 				for ad in usedAddresses:
 					tempAddressText=(tempAddressText+"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;")
-					tempAddressText=(tempAddressText+"<small>"+ad[0]+" </small><font color='#26bfb5'><small>"+str(ad[1])+"</small></font><font color='#cc147f'><small> x42</small></font><br>")
+					tempAddressText=(tempAddressText+"<small>"+ad[0]+" </small><font class='amount-text'><small><b>"+str(ad[1])+"</b></small></font><font class='x-text'><small> x42</small></font><br>")
 			addressDone.strSig.emit(tempAddressText)
 
 		@Slot()
@@ -140,12 +140,12 @@ if __name__ == '__main__':
 			preDayStamp=(datetime.now().timestamp()-86400)
 			if walletHistoryJson and historyRespCode==200:
 				for history in walletHistoryJson["history"]:
-					tempHistoryText="<table style='border-collapse:collapse; border-bottom:1px solid white' width='100%' cellspacing='2' cellpadding='2'>"
+					tempHistoryText=cssStyle+"<table style='border-collapse:collapse; border-bottom:1px solid white' width='100%' cellspacing='2' cellpadding='2'>"
 					for transaction in history["transactionsHistory"]:
 						timeInt=int(transaction["timestamp"])
 						txType=transaction["type"]
 						tempHistoryText=(tempHistoryText+"<tr><td align='center' style='width:30%;'><i>"+txType+"</i></td>")
-						tempHistoryText=(tempHistoryText+"<td style='width:30%;'><font color='#26bfb5'>"+"{0:.8f}".format(transaction["amount"]/100000000)+"</font><font color='#cc147f'>  x42 </font></td>")
+						tempHistoryText=(tempHistoryText+'<td style="width:30%;"><font class="amount-text"><b>'+"{0:.8f}".format(transaction["amount"]/100000000)+'</b></font><font class="x-text">  x42 </font></td>')
 						tempHistoryText=(tempHistoryText+"<td style='width:39%;'>"+datetime.fromtimestamp(timeInt).strftime('%r on %b %d, %Y')+"</td></tr>")
 						if timeInt>preDayStamp and txType=="staked":
 							recentStakes+=1
@@ -249,7 +249,7 @@ if __name__ == '__main__':
 
 	@Slot()
 	def updateWalletLabel(stakes):
-		historyLabel.setText("<h2><font color='#cc147f'>Wallet History</font><font color='#979a9a'><small> ("+stakes+" rewards in the past 24 hours)</small></font></h2>")
+		historyLabel.setText("<h2>Wallet History<font color='#979a9a'><small> ("+stakes+" rewards in the past 24 hours)</small></font></h2>")
 
 	@Slot()
 	def populateWallets(listOfWallets):
@@ -377,6 +377,7 @@ if __name__ == '__main__':
 	def updateSettings():
 		xConfig.set('SETTINGS','NODE_HOST',hostSetting.text())
 		xConfig.set('SETTINGS','REFRESH_INTERVAL',refreshSetting.text())
+		xConfig.set('SETTINGS','THEME',str(selectStyleName.currentIndex()))
 
 		with open(configPath,'w') as configfile:
 			xConfig.write(configfile)
@@ -388,32 +389,36 @@ if __name__ == '__main__':
 	def setDefaultSettings():
 		hostSetting.setText("127.0.0.1:42220")
 		refreshSetting.setText("900")
+		selectStyleName.setCurrentIndex(0)
+
+	def changeStyle(style):
+		global cssStyle
+		#Dark
+		if style==0:
+			cssStyle="<style>.amount-text {color: #26bfb5;} .x-text {color: #cc147f;}</style>"
+			stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch; color: #FFFFFF;} QLabel{color: #FFFFFF;} QLabel#heading {color: #cc147f;} QMessageBox,QComboBox {background-color: rgba(34, 34, 34, 1.0); color: #FFFFFF;} QLineEdit {background-color: rgba(34, 34, 34, 0.8); color: #FFFFFF; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); color: #FFFFFF; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+		#Light
+		elif style==1:
+			cssStyle="<style>.amount-text {color: #cc147f} .x-text {color: #26bfb5;}</style>"
+			stackedWidget.setStyleSheet("QStackedWidget {} QLabel{} QLabel#heading {color: #26bfb5;} QMessageBox,QComboBox {} QLineEdit {} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {} QScrollBar,QScrollBar::handle {} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{}" )
+			logoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
+			sendLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
+			settingsLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
+			walletLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 
 	#Application Setup
 	appctxt=ApplicationContext()
 	app =appctxt.app
 
-	# Now use a palette to switch to dark colors:
-	palette = QPalette()
-	palette.setColor(QPalette.Window, QColor(34, 34, 34))
-	palette.setColor(QPalette.WindowText, Qt.white)
-	palette.setColor(QPalette.Base, QColor(25, 25, 25))
-	palette.setColor(QPalette.AlternateBase, QColor(34, 34, 34))
-	palette.setColor(QPalette.ToolTipBase, Qt.white)
-	palette.setColor(QPalette.ToolTipText, Qt.white)
-	palette.setColor(QPalette.Text, Qt.white)
-	palette.setColor(QPalette.Button, QColor(34, 34, 34))
-	palette.setColor(QPalette.ButtonText, Qt.white)
-	palette.setColor(QPalette.BrightText, Qt.red)
-	palette.setColor(QPalette.Link, QColor(42, 130, 218))
-	palette.setColor(QPalette.Highlight, QColor(42, 130, 218))
-	palette.setColor(QPalette.HighlightedText, Qt.black)
-	app.setPalette(palette)
-
 	#Config seteup and Swagger Api settings
 	xConfig=configparser.ConfigParser()
 	sysPlatform=platform.system().upper()
 	baseConfig=appctxt.get_resource('x42lite.ini')
+	baseModTime=os.path.getmtime(baseConfig)
 
 	if sysPlatform == 'WINDOWS':
 		configDir=os.path.join(os.environ['APPDATA'],'x42lite')
@@ -421,9 +426,17 @@ if __name__ == '__main__':
 		if not os.path.exists(configDir):
 			os.makedirs(configDir)
 			shutil.copyfile(baseConfig,configPath)
+		else:
+			if not os.path.exists(configPath):
+				shutil.copyfile(baseConfig,configPath)
+			else:
+				configModTime=os.path.getmtime(configPath)
+				if baseModTime > configModTime:
+					shutil.copyfile(baseConfig,configPath)
+
 	else:
 		configPath=baseConfig
-		
+
 	xConfig.read(configPath)
 	swagIP=str(xConfig['SETTINGS']['NODE_HOST'])
 	swaggerServer = "http://"+swagIP
@@ -468,8 +481,6 @@ if __name__ == '__main__':
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
 	stackedWidget.addWidget(settingsPage)
-	stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch;} QMessageBox,QComboBox {background-color: rgba(34, 34, 34, 1.0);} QLineEdit {background-color: rgba(34, 34, 34, 0.8); border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
-	mainWin.addWidget(stackedWidget)
 	
 	#Dashboard Page
 	geom = app.desktop().availableGeometry()
@@ -486,28 +497,27 @@ if __name__ == '__main__':
 	addressArea.setLineWrapMode(QTextEdit.NoWrap)
 	addressArea.setAcceptRichText(1)
 	historyLabel=QLabel()
+	historyLabel.setObjectName("heading")
 	balanceLabel=QLabel()
+	balanceLabel.setObjectName("heading")
 	addressLabel=QLabel()
+	addressLabel.setObjectName("heading")
 	stakingLabel=QLabel()
-	#stakingLabel.setAlignment(Qt.AlignRight | Qt.AlignBottom)
 	logoLabel=QLabel()
 	sendLogoLabel=QLabel()
 	settingsLogoLabel=QLabel()
 	walletLogoLabel=QLabel()
+	logoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
+	sendLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
+	settingsLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
+	walletLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	autoLabel=QLabel()
 	autoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	xImage=QPixmap(":/base/x42logo.png")
+	xImageBlack=QPixmap(":/base/x42logo_black.png")
 	xSendIcon=QIcon(":/base/x42logo_send.png")
 	xDashboardIcon=QIcon(":/base/x42logo_dashboard.png")
 	xSettingsIcon=QIcon(":/base/cog.png")
-	logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
-	logoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
-	sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
-	sendLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
-	settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
-	settingsLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
-	walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
-	walletLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	refreshButton=QPushButton("Refresh")
 	refreshButton.setStyleSheet("max-width: 60px; max-height: 30px;")
 	sendButton=QPushButton()
@@ -554,9 +564,9 @@ if __name__ == '__main__':
 	vDashboardLayout.addLayout(hHistoryLabelLayout)
 	vDashboardLayout.addWidget(walletHistoryArea)
 	vDashboardLayout.addLayout(hFooterLayout)
-	balanceLabel.setText("<h2><font color='#cc147f'>Balances</font></h2>")
-	addressLabel.setText("<h2><font color='#cc147f'>Addresses</font><font color='#979a9a'><small> (click address to copy)</small></font></h2>")
-	historyLabel.setText("<h2><font color='#cc147f'>Wallet History</font></h2>")
+	balanceLabel.setText("<h2>Balances</h2>")
+	addressLabel.setText("<h2>Addresses<font color='#979a9a'><small> (click address to copy)</small></font></h2>")
+	historyLabel.setText("<h2>Wallet History</h2>")
 	dashboardPage.setLayout(vDashboardLayout)
 
 	#wallet select page
@@ -629,8 +639,16 @@ if __name__ == '__main__':
 	refreshSetting=QLineEdit()
 	refreshSetting.setFixedWidth(200)
 	refreshSetting.setText(str(secToRefresh))
+	selectStyleName=QComboBox()
+	selectStyleName.setFixedWidth(200)
+	selectStyleName.setEditable(True)
+	selectStyleName.lineEdit().setReadOnly(True)
+	selectStyleName.lineEdit().setAlignment(Qt.AlignCenter)
+	selectStyleName.addItems(['Dark','Light'])
+	selectStyleName.setCurrentIndex(int(xConfig['SETTINGS']['THEME']))
 	settingsFormLayout.addRow(settingsFormLayout.tr("&Node Address <font color='#979a9a'><small>(IP and Port)</small></font>: "),hostSetting)
 	settingsFormLayout.addRow(settingsFormLayout.tr("&Auto Refresh Timer <font color='#979a9a'><small>(In Seconds)</small></font>: "),refreshSetting)
+	settingsFormLayout.addRow(settingsFormLayout.tr("&UI Theme: "),selectStyleName)
 	hSettingsFormLayout.addStretch(1)
 	hSettingsFormLayout.addLayout(settingsFormLayout)
 	hSettingsFormLayout.addStretch(1)
@@ -688,13 +706,16 @@ if __name__ == '__main__':
 	vSendLayout.addLayout(hFormButtonsLayout)
 	sendPage.setLayout(vSendLayout)
 
+	changeStyle(int(xConfig['SETTINGS']['THEME']))
+	mainWin.addWidget(stackedWidget)
+
 	msgBox=QMessageBox(parent=stackedWidget)
 	mainWin.setFixedSize(geom.width()*.5, geom.height() *.6)
 	mainWin.show()
 
 	#waiting spinner
 	waitSpin=QtWaitingSpinner(mainWin,True,True,Qt.ApplicationModal)
-	waitSpin.setColor(QColor(255,255,255))
+	waitSpin.setColor(QColor(71,23,246))
 
 	#Signals
 	startSpinSig=workSignal()
@@ -742,6 +763,7 @@ if __name__ == '__main__':
 	refreshTimer.timeout.connect(updateTimer)
 	refreshTimer.start(1000)
 
+	selectStyleName.currentIndexChanged.connect(changeStyle)
 	settingsButton.clicked.connect(switchToSettingsPage)
 	defaultSettingsButton.clicked.connect(setDefaultSettings)
 	cancelSettingsButton.clicked.connect(switchToWalletPage)
