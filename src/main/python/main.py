@@ -401,14 +401,27 @@ if __name__ == '__main__':
 			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			waitSpin.setColor(QColor(255,255,255))
 		#Light
 		elif style==1:
 			cssStyle="<style>.amount-text {color: #cc147f} .x-text {color: #26bfb5;}</style>"
-			stackedWidget.setStyleSheet("QStackedWidget {} QLabel{} QLabel#heading {color: #26bfb5;} QMessageBox,QComboBox {} QLineEdit {} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {} QScrollBar,QScrollBar::handle {} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{}" )
+			stackedWidget.setStyleSheet("QStackedWidget {background-color:#F0F0F0; color:#000000;} QLabel{color:#000000;} QLabel#heading {color: #26bfb5;} QMessageBox,QComboBox {background-color: rgba(255, 255, 255, 1.0); color: #000000;} QLineEdit {background-color: rgba(255, 255, 255, 0.8); color: #000000; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(255, 255, 255, 0.7); color: #000000; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(255, 255, 255, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			walletLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
+			waitSpin.setColor(QColor(71,23,246))
+		#Red
+		if style==2:
+			cssStyle="<style>.amount-text {color: #FFFFFF;} .x-text {color: #C3073F;}</style>"
+			stackedWidget.setStyleSheet("QStackedWidget {background-color:#1A1A1D; color: #979A9A;} QLabel{color: #979A9A;} QLabel#heading {color: #950740;} QMessageBox,QComboBox {background-color: rgba(26, 26, 29, 1.0); color: #979A9A;} QLineEdit {background-color: rgba(26, 26, 29, 0.8); color: #979A9A; border:1px solid #000000;} QPushButton {background-color: #6F2232; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #950740;} QTextEdit {background-color: rgba(26, 26, 29, 0.7); color: #979A9A; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(26, 26, 29, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			hLine.setColor(QColor(111,34,50))
+			waitSpin.setColor(QColor(149,7,64))
+
 
 	#Application Setup
 	appctxt=ApplicationContext()
@@ -517,7 +530,7 @@ if __name__ == '__main__':
 	xImageBlack=QPixmap(":/base/x42logo_black.png")
 	xSendIcon=QIcon(":/base/x42logo_send.png")
 	xDashboardIcon=QIcon(":/base/x42logo_dashboard.png")
-	xSettingsIcon=QIcon(":/base/cog.png")
+	xSettingsIcon=QIcon(":/base/tune_black.png")
 	refreshButton=QPushButton("Refresh")
 	refreshButton.setStyleSheet("max-width: 60px; max-height: 30px;")
 	sendButton=QPushButton()
@@ -644,7 +657,7 @@ if __name__ == '__main__':
 	selectStyleName.setEditable(True)
 	selectStyleName.lineEdit().setReadOnly(True)
 	selectStyleName.lineEdit().setAlignment(Qt.AlignCenter)
-	selectStyleName.addItems(['Dark','Light'])
+	selectStyleName.addItems(['Dark','Light','Red'])
 	selectStyleName.setCurrentIndex(int(xConfig['SETTINGS']['THEME']))
 	settingsFormLayout.addRow(settingsFormLayout.tr("&Node Address <font color='#979a9a'><small>(IP and Port)</small></font>: "),hostSetting)
 	settingsFormLayout.addRow(settingsFormLayout.tr("&Auto Refresh Timer <font color='#979a9a'><small>(In Seconds)</small></font>: "),refreshSetting)
@@ -706,7 +719,6 @@ if __name__ == '__main__':
 	vSendLayout.addLayout(hFormButtonsLayout)
 	sendPage.setLayout(vSendLayout)
 
-	changeStyle(int(xConfig['SETTINGS']['THEME']))
 	mainWin.addWidget(stackedWidget)
 
 	msgBox=QMessageBox(parent=stackedWidget)
@@ -716,6 +728,9 @@ if __name__ == '__main__':
 	#waiting spinner
 	waitSpin=QtWaitingSpinner(mainWin,True,True,Qt.ApplicationModal)
 	waitSpin.setColor(QColor(71,23,246))
+	waitSpin.setLineWidth(7)
+
+	changeStyle(int(xConfig['SETTINGS']['THEME']))
 
 	#Signals
 	startSpinSig=workSignal()
