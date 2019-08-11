@@ -657,7 +657,7 @@ if __name__ == '__main__':
 	selectStyleName.setEditable(True)
 	selectStyleName.lineEdit().setReadOnly(True)
 	selectStyleName.lineEdit().setAlignment(Qt.AlignCenter)
-	selectStyleName.addItems(['Dark','Light','Red'])
+	selectStyleName.addItems(['x42-Dark','Light','Red'])
 	selectStyleName.setCurrentIndex(int(xConfig['SETTINGS']['THEME']))
 	settingsFormLayout.addRow(settingsFormLayout.tr("&Node Address <font color='#979a9a'><small>(IP and Port)</small></font>: "),hostSetting)
 	settingsFormLayout.addRow(settingsFormLayout.tr("&Auto Refresh Timer <font color='#979a9a'><small>(In Seconds)</small></font>: "),refreshSetting)
