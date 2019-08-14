@@ -497,7 +497,7 @@ if __name__ == '__main__':
 		#Dark
 		if style==0:
 			cssStyle="<style>.amount-text {color: #26bfb5;} .x-text {color: #cc147f;} .hyper-text{color:rgba(204,20,127,.8)}</style>"
-			stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch; color: #FFFFFF;} QLabel{color: #FFFFFF;} QLabel#heading {color: #cc147f;} QMessageBox,QComboBox {background-color: rgba(34, 34, 34, 1.0); color: #FFFFFF;} QLineEdit {background-color: rgba(34, 34, 34, 0.8); color: #FFFFFF; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); color: #FFFFFF; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+			stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch; color: #FFFFFF;} QLabel{color: #FFFFFF;} QLabel#heading {color: #cc147f;} QMessageBox,QComboBox,QAbstractItemView {background-color: rgba(34, 34, 34, 1.0); color: #FFFFFF;} QLineEdit {background-color: rgba(34, 34, 34, 0.8); color: #FFFFFF; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); color: #FFFFFF; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
@@ -508,7 +508,7 @@ if __name__ == '__main__':
 		#Light
 		elif style==1:
 			cssStyle="<style>.amount-text {color: #cc147f} .x-text {color: #26bfb5;} .hyper-text{color:rgba(38,191,181,.9)}</style>"
-			stackedWidget.setStyleSheet("QStackedWidget {background-color:#F0F0F0; color:#000000;} QLabel{color:#000000;} QLabel#heading {color: #26bfb5;} QMessageBox,QComboBox {background-color: rgba(255, 255, 255, 1.0); color: #000000;} QLineEdit {background-color: rgba(255, 255, 255, 0.8); color: #000000; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(255, 255, 255, 0.7); color: #000000; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(255, 255, 255, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+			stackedWidget.setStyleSheet("QStackedWidget {background-color:#F0F0F0; color:#000000;} QLabel{color:#000000;} QLabel#heading {color: #26bfb5;} QMessageBox,QComboBox,QAbstractItemView {background-color: rgba(255, 255, 255, 1.0); color: #000000;} QLineEdit {background-color: rgba(255, 255, 255, 0.8); color: #000000; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(255, 255, 255, 0.7); color: #000000; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(255, 255, 255, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
@@ -519,7 +519,7 @@ if __name__ == '__main__':
 		#Red
 		if style==2:
 			cssStyle="<style>.amount-text {color: #FFFFFF;} .x-text {color: #C3073F;} .hyper-text{color:rgba(195,7,63,.5)}</style>"
-			stackedWidget.setStyleSheet("QStackedWidget {background-color:#1A1A1D; color: #979A9A;} QLabel{color: #979A9A;} QLabel#heading {color: #950740;} QMessageBox,QComboBox {background-color: rgba(26, 26, 29, 1.0); color: #979A9A;} QLineEdit {background-color: rgba(26, 26, 29, 0.8); color: #979A9A; border:1px solid #000000;} QPushButton {background-color: #6F2232; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #950740;} QTextEdit {background-color: rgba(26, 26, 29, 0.7); color: #979A9A; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(26, 26, 29, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
+			stackedWidget.setStyleSheet("QStackedWidget {background-color:#1A1A1D; color: #979A9A;} QLabel{color: #979A9A;} QLabel#heading {color: #950740;} QMessageBox,QComboBox,QAbstractItemView {background-color: rgba(26, 26, 29, 1.0); color: #979A9A;} QLineEdit {background-color: rgba(26, 26, 29, 0.8); color: #979A9A; border:1px solid #000000;} QPushButton {background-color: #6F2232; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #950740;} QTextEdit {background-color: rgba(26, 26, 29, 0.7); color: #979A9A; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(26, 26, 29, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
@@ -764,7 +764,7 @@ if __name__ == '__main__':
 	vWalletFormButtonsLayout.addStretch(1)
 	vWalletFormButtonsLayout.setAlignment(Qt.AlignTop)
 	selectWalletName=QComboBox()
-	selectWalletName.setFixedWidth(200)
+	selectWalletName.setFixedWidth(250)
 	selectWalletName.setEditable(True)
 	selectWalletName.lineEdit().setReadOnly(True)
 	selectWalletName.lineEdit().setAlignment(Qt.AlignCenter)
