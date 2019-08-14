@@ -24,8 +24,11 @@ if __name__ == '__main__':
 				walletJson=responseWalletName.json()
 				walletResponseCode=responseWalletName.status_code
 				if walletJson and walletResponseCode==200:
-					for wallet in walletJson["walletsFiles"]:
-						wallets.append(wallet.split(".")[0])
+					if walletJson["walletsFiles"]:
+						for wallet in walletJson["walletsFiles"]:
+							wallets.append(wallet.split(".")[0])
+					else:
+						wallets.append("No Wallets")
 					grabWalletSig.objSig.emit(wallets)
 			except requests.exceptions.RequestException as e:
 				displayErrorSig.objSig.emit(["No Wallet Files Found at Host IP: "+swagIP+".  Check IP Setting.",e])
@@ -33,9 +36,43 @@ if __name__ == '__main__':
 				grabWalletSig.objSig.emit(wallets)
 
 		@Slot()
+		def crWalletWorker(self,params):
+			which=params[0]
+			name=params[1]
+			passW=params[2]
+			passP=params[3]
+			mnem=params[4]
+			if which==1:
+				try:
+					mnemSession=futuresSession.get(url=mnemonicURL, timeout=30, hooks={'response':parseJson})
+					mnemResult=mnemSession.result()
+					mnemRespCode=mnemResult.code
+					mnemRespData=mnemResult.data
+					if mnemRespData and mnemRespCode==200:
+						createReqJson={"mnemonic": mnemRespData, "password": passW, "passphrase": passP, "name": name}
+						createWallSession=futuresSession.post(url=createWalletURL, timeout=30, json=createReqJson, hooks={'response':parseJson})	
+						createWallResult=createWallSession.result()
+						createWallCode=createWallResult.code
+						createWallData=createWallResult.data
+						if createWallData and createWallCode==200:
+							dispCreateSuccessSig.strSig.emit(createWallData)
+				except requests.exceptions.RequestException as e:
+					displayErrorSig.objSig.emit(["Network Error",e])
+			elif which==2:
+				try:
+					restoreReqJson={"mnemonic": mnem, "password": passW, "passphrase": passP, "name": name}
+					restoreWallSession=futuresSession.post(url=restoreWalletURL, timeout=30, json=restoreReqJson, hooks={'response':parseJson})
+					restoreWallResult=restoreWallSession.result()
+					restoreWallCode=restoreWallResult.code
+					if restoreWallCode==200:
+						dispCreateSuccessSig.workDone.emit()
+				except requests.exceptions.RequestException as e:
+					displayErrorSig.objSig.emit(["Network Error",e])
+
+		@Slot()
 		def buildTransaction(self,txJson):
 			try:
-				buildTxSession=futuresSession.post(url=buildTxURL, timeout=60, json=txJson, hooks={'response':parseJson})				
+				buildTxSession=futuresSession.post(url=buildTxURL, timeout=30, json=txJson, hooks={'response':parseJson})				
 				buildTxResult=buildTxSession.result()
 				buildTxRespCode=buildTxResult.code
 				buildTxJson=buildTxResult.data
@@ -50,7 +87,7 @@ if __name__ == '__main__':
 			txHex=data
 			sendTxParams={"hex":txHex}
 			try:
-				sendTxSession=futuresSession.post(url=sendTxURL, timeout=60, json=sendTxParams, hooks={'response':parseJson})
+				sendTxSession=futuresSession.post(url=sendTxURL, timeout=30, json=sendTxParams, hooks={'response':parseJson})
 				sendTxResult=sendTxSession.result()
 				sendTxRespCode=sendTxResult.code
 				sendTxJson=sendTxResult.data
@@ -197,10 +234,34 @@ if __name__ == '__main__':
 		response=resp[1]
 		message="There was an error!\n\n{}".format("\n".join(textwrap.wrap(str(responseCode),width=55)))
 		msgBox.setText(message)
-		#msgBox.setInformativeText("Error: "+str(responseCode))
 		msgBox.setDetailedText(str(response))
-		msgBox.exec_()
 		stopSpin()
+		msgBox.exec_()
+
+	@Slot()
+	def displayRestore():
+		stopSpin()
+		clearCRForm()
+		switchToWalletPage()
+		initWallets()
+		message="Success! Wallet Recovered!"
+		msgBox.setText(message)
+		msgBox.exec_()
+
+	@Slot()
+	def displayCreate(mnemFinal):
+		stopSpin()
+		clearCRForm()
+		switchToWalletPage()
+		initWallets()
+		recWordsEnum=""
+		for i,item in enumerate(mnemFinal.split(" "),1):
+			recWordsEnum=recWordsEnum+str(i)+".&nbsp;"+item+"&nbsp;&nbsp;&nbsp;&nbsp;"
+			if i % 4 ==0:
+				recWordsEnum=recWordsEnum+"<br>"
+		message="Success! Wallet Created!<br><br><font color='#B33A3A'>IMPORTANT!</font>{}".format("".join(textwrap.wrap(" Secure the following words along with your password and passphrase.  They are required for wallet recovery.<br><br>"+recWordsEnum,width=55,drop_whitespace=False)))
+		msgBox.setText(message)
+		msgBox.exec_()
 
 	@Slot()
 	def displaySuccess():
@@ -209,8 +270,12 @@ if __name__ == '__main__':
 		msgBox.exec_()
 
 	def parseJson(resp, *args, **kwargs):
-		resp.data=resp.json()
 		resp.code=resp.status_code
+		try:
+			resp.data=resp.json()
+		except:
+			resp.data={"message": "No Json Data"}
+		
 
 	@Slot()
 	def stopSpin():
@@ -269,6 +334,10 @@ if __name__ == '__main__':
 		if len(copiedAddr) == 34:
 			addressArea.setTextCursor(addrCursor)
 			app.clipboard().setText(copiedAddr)
+
+	def switchToCreateRestorePage():
+		clearCRForm()
+		stackedWidget.setCurrentIndex(4)
 
 	def switchToSettingsPage():
 		stackedWidget.setCurrentIndex(3)
@@ -332,6 +401,32 @@ if __name__ == '__main__':
 		startSpin()
 		fireLoad.workDone.emit()
 
+	def createRestoreDecision():
+		whichCR=selectCR.currentIndex()
+		passW=crWalletPassword.text()
+		passP=crWalletPassphrase.text()
+		passWcheck=crWalletPasswordCheck.text()
+		passPcheck=crWalletPassphraseCheck.text()
+		wName=crWalletName.text()
+		mnem=crMnemonic.text()
+
+		crParams=[whichCR,wName,passW,passP,mnem]
+		if whichCR==1:
+			if "" not in (passW,passP,passWcheck,passPcheck,wName):
+				if passW==passWcheck and passP==passPcheck:
+					startSpin()
+					whichCRSig.objSig.emit(crParams)
+				else:
+					displayError(["Password or Passphrase Doesn't Match",""])
+			else:
+				displayError(["Make Sure All Fields Are Populated",""])
+		elif whichCR==2:
+			if "" not in (passW,passP,wName,mnem):
+				startSpin()
+				whichCRSig.objSig.emit(crParams)
+			else:
+				displayError(["Make Sure All Fields Are Populated",""])
+
 	def submitSend():
 		global walletName
 		buildTxParams={
@@ -361,6 +456,9 @@ if __name__ == '__main__':
 		global walletURL
 		global buildTxURL
 		global sendTxURL
+		global mnemonicURL
+		global createWalletURL
+		global restoreWalletURL
 
 		swagIP=sIP
 		swaggerServer = "http://"+swagIP
@@ -371,6 +469,9 @@ if __name__ == '__main__':
 		walletURL=swaggerServer+walletEndpoint
 		buildTxURL=swaggerServer+buildTxEndpoint
 		sendTxURL=swaggerServer+sendTxEndpoint
+		mnemonicURL=swaggerServer+mnemonicEndpoint
+		createWalletURL=swaggerServer+createWalletEndpoint
+		restoreWalletURL=swaggerServer+restoreWalletEndpoint
 		switchToWalletPage()
 		initWallets()
 
@@ -395,33 +496,88 @@ if __name__ == '__main__':
 		global cssStyle
 		#Dark
 		if style==0:
-			cssStyle="<style>.amount-text {color: #26bfb5;} .x-text {color: #cc147f;}</style>"
+			cssStyle="<style>.amount-text {color: #26bfb5;} .x-text {color: #cc147f;} .hyper-text{color:rgba(204,20,127,.8)}</style>"
 			stackedWidget.setStyleSheet("QStackedWidget {border-image: url(:/base/x42poster_darkened.jpg) 0 0 0 0 stretch stretch; color: #FFFFFF;} QLabel{color: #FFFFFF;} QLabel#heading {color: #cc147f;} QMessageBox,QComboBox {background-color: rgba(34, 34, 34, 1.0); color: #FFFFFF;} QLineEdit {background-color: rgba(34, 34, 34, 0.8); color: #FFFFFF; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(34, 34, 34, 0.7); color: #FFFFFF; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(34, 34, 34, 0.7); border:1px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			crLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			createRestoreLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Create or Restore Wallet</a>")
 			waitSpin.setColor(QColor(255,255,255))
 		#Light
 		elif style==1:
-			cssStyle="<style>.amount-text {color: #cc147f} .x-text {color: #26bfb5;}</style>"
+			cssStyle="<style>.amount-text {color: #cc147f} .x-text {color: #26bfb5;} .hyper-text{color:rgba(38,191,181,.9)}</style>"
 			stackedWidget.setStyleSheet("QStackedWidget {background-color:#F0F0F0; color:#000000;} QLabel{color:#000000;} QLabel#heading {color: #26bfb5;} QMessageBox,QComboBox {background-color: rgba(255, 255, 255, 1.0); color: #000000;} QLineEdit {background-color: rgba(255, 255, 255, 0.8); color: #000000; border:1px solid #000000;} QPushButton {background-color: #4717F6; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #4114e5;} QTextEdit {background-color: rgba(255, 255, 255, 0.7); color: #000000; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(255, 255, 255, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			walletLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
+			crLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
+			createRestoreLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Create or Restore Wallet</a>")
 			waitSpin.setColor(QColor(71,23,246))
 		#Red
 		if style==2:
-			cssStyle="<style>.amount-text {color: #FFFFFF;} .x-text {color: #C3073F;}</style>"
+			cssStyle="<style>.amount-text {color: #FFFFFF;} .x-text {color: #C3073F;} .hyper-text{color:rgba(195,7,63,.5)}</style>"
 			stackedWidget.setStyleSheet("QStackedWidget {background-color:#1A1A1D; color: #979A9A;} QLabel{color: #979A9A;} QLabel#heading {color: #950740;} QMessageBox,QComboBox {background-color: rgba(26, 26, 29, 1.0); color: #979A9A;} QLineEdit {background-color: rgba(26, 26, 29, 0.8); color: #979A9A; border:1px solid #000000;} QPushButton {background-color: #6F2232; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #950740;} QTextEdit {background-color: rgba(26, 26, 29, 0.7); color: #979A9A; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(26, 26, 29, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			sendLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			settingsLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			crLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
+			createRestoreLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Create or Restore Wallet</a>")
 			hLine.setColor(QColor(111,34,50))
 			waitSpin.setColor(QColor(149,7,64))
 
+	def clearCRForm():
+		crWalletName.clear()
+		crWalletPassword.clear()
+		crWalletPassphrase.clear()
+		crWalletPasswordCheck.clear()
+		crWalletPassphraseCheck.clear()
+		crMnemonic.clear()
+
+	def crBuildForm(op):
+		clearCRForm()
+		if op == 0:
+			crWalletName.hide()
+			crWalletPassword.hide()
+			crWalletPassphrase.hide()
+			crWalletPasswordCheck.hide()
+			crWalletPassphraseCheck.hide()
+			crMnemonic.hide()	
+			crFormLayout.labelForField(crWalletName).hide()
+			crFormLayout.labelForField(crWalletPassword).hide()
+			crFormLayout.labelForField(crWalletPassphrase).hide()
+			crFormLayout.labelForField(crWalletPasswordCheck).hide()
+			crFormLayout.labelForField(crWalletPassphraseCheck).hide()
+			crFormLayout.labelForField(crMnemonic).hide()		
+		if op == 1:
+			crWalletName.show()
+			crWalletPassword.show()
+			crWalletPassphrase.show()
+			crWalletPasswordCheck.show()
+			crWalletPassphraseCheck.show()
+			crMnemonic.hide()
+			crFormLayout.labelForField(crWalletName).show()
+			crFormLayout.labelForField(crWalletPassword).show()
+			crFormLayout.labelForField(crWalletPassphrase).show()
+			crFormLayout.labelForField(crWalletPasswordCheck).show()
+			crFormLayout.labelForField(crWalletPassphraseCheck).show()
+			crFormLayout.labelForField(crMnemonic).hide()			
+		if op == 2:
+			crWalletName.show()
+			crWalletPassword.show()
+			crWalletPassphrase.show()
+			crMnemonic.show()
+			crWalletPasswordCheck.hide()
+			crWalletPassphraseCheck.hide()
+			crFormLayout.labelForField(crWalletName).show()
+			crFormLayout.labelForField(crWalletPassword).show()
+			crFormLayout.labelForField(crWalletPassphrase).show()
+			crFormLayout.labelForField(crWalletPasswordCheck).hide()
+			crFormLayout.labelForField(crWalletPassphraseCheck).hide()
+			crFormLayout.labelForField(crMnemonic).show()
 
 	#Application Setup
 	appctxt=ApplicationContext()
@@ -452,6 +608,7 @@ if __name__ == '__main__':
 
 	xConfig.read(configPath)
 	swagIP=str(xConfig['SETTINGS']['NODE_HOST'])
+
 	swaggerServer = "http://"+swagIP
 	historyEndpoint = '/api/Wallet/history'
 	balanceEndpoint = '/api/Wallet/balance'
@@ -460,13 +617,9 @@ if __name__ == '__main__':
 	walletEndpoint = '/api/Wallet/files'
 	buildTxEndpoint= '/api/Wallet/build-transaction'
 	sendTxEndpoint= '/api/Wallet/send-transaction'
-	walletHistoryURL=swaggerServer+historyEndpoint
-	balanceURL=swaggerServer+balanceEndpoint
-	stakingURL=swaggerServer+stakingEndpoint
-	addressURL=swaggerServer+addressEndpoint
-	walletURL=swaggerServer+walletEndpoint
-	buildTxURL=swaggerServer+buildTxEndpoint
-	sendTxURL=swaggerServer+sendTxEndpoint
+	mnemonicEndpoint='/api/Wallet/mnemonic'
+	createWalletEndpoint='/api/Wallet/create'
+	restoreWalletEndpoint='/api/Wallet/recover'
 
 	apiSession = requests.session()
 	futuresSession=FuturesSession()
@@ -489,11 +642,13 @@ if __name__ == '__main__':
 	dashboardPage=QWidget()
 	sendPage=QWidget()
 	settingsPage=QWidget()
+	createRestorePage=QWidget()
 	stackedWidget=QStackedWidget()
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
 	stackedWidget.addWidget(settingsPage)
+	stackedWidget.addWidget(createRestorePage)
 	
 	#Dashboard Page
 	geom = app.desktop().availableGeometry()
@@ -520,10 +675,12 @@ if __name__ == '__main__':
 	sendLogoLabel=QLabel()
 	settingsLogoLabel=QLabel()
 	walletLogoLabel=QLabel()
+	crLogoLabel=QLabel()
 	logoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	sendLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	settingsLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	walletLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
+	crLogoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	autoLabel=QLabel()
 	autoLabel.setAlignment(Qt.AlignRight | Qt.AlignCenter)
 	xImage=QPixmap(":/base/x42logo.png")
@@ -570,7 +727,6 @@ if __name__ == '__main__':
 	hHistoryLabelLayout=QHBoxLayout()
 	hHistoryLabelLayout.addWidget(historyLabel)
 	hHistoryLabelLayout.addStretch(1)
-	#hHistoryLabelLayout.addWidget(stakingLabel)
 	vDashboardLayout.addLayout(hHeaderLayout)
 	vDashboardLayout.addLayout(hMidLayout)
 	vDashboardLayout.addWidget(hLine)
@@ -590,10 +746,11 @@ if __name__ == '__main__':
 	clearWalletButton=QPushButton("Close")
 	clearWalletButton.setStyleSheet("max-width: 80px; max-height: 30px;")
 	settingsButton=QPushButton()
-	#settingsButton.setFlat(1)
 	settingsButton.setIcon(xSettingsIcon)
 	settingsButton.setIconSize(QSize(15,15))
 	settingsButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	createRestoreLabel=QLabel()
+	createRestoreLabel.setAlignment(Qt.AlignBottom | Qt.AlignCenter)
 	hWalletFormLayout=QHBoxLayout()
 	walletFormLayout=QFormLayout()
 	walletFormLayout.setLabelAlignment(Qt.AlignRight)
@@ -619,9 +776,17 @@ if __name__ == '__main__':
 	hWalletFormLayout.addStretch(1)
 	hWalletFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
 	hWalletHeaderLayout.setAlignment(Qt.AlignTop)
+	hWalletFooterLayout=QHBoxLayout()
+	hWalletFooterLayout.addStretch(1)
+	hWalletFooterLayout.addWidget(createRestoreLabel)
+	hWalletFooterLayout.addStretch(1)
 	vWalletLayout.addLayout(hWalletHeaderLayout)
+	vWalletLayout.addStretch(1)
 	vWalletLayout.addLayout(hWalletFormLayout)
+	vWalletLayout.addStretch(1)
 	vWalletLayout.addLayout(vWalletFormButtonsLayout)
+	vWalletLayout.addStretch(1)
+	vWalletLayout.addLayout(hWalletFooterLayout)
 	walletPage.setLayout(vWalletLayout)
 
 	#Settings Page
@@ -719,6 +884,92 @@ if __name__ == '__main__':
 	vSendLayout.addLayout(hFormButtonsLayout)
 	sendPage.setLayout(vSendLayout)
 
+	#Create & Restore Wallet Page 
+	submitCRButton=QPushButton("Submit")
+	submitCRButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	clearCRButton=QPushButton("Clear")
+	clearCRButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	cancelCRButton=QPushButton("Cancel")
+	cancelCRButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	hCRFormLayout=QHBoxLayout()
+	crFormLayout=QFormLayout()
+	crFormLayout.setLabelAlignment(Qt.AlignRight)
+	vCRLayout=QVBoxLayout()
+	hCRButtonsLayout=QHBoxLayout()
+	hCRButtonsLayout.addStretch(1)
+	hCRButtonsLayout.addWidget(cancelCRButton)
+	hCRButtonsLayout.addWidget(clearCRButton)
+	hCRButtonsLayout.addWidget(submitCRButton)
+	hCRButtonsLayout.addStretch(1)
+	hCRButtonsLayout.setAlignment(Qt.AlignTop)
+	regExPword="^\S+$"
+	regExPwordValidator=QRegExpValidator(regExPword)
+	selectCR=QComboBox()
+	selectCR.setFixedWidth(300)
+	selectCR.setEditable(True)
+	selectCR.lineEdit().setReadOnly(True)
+	selectCR.lineEdit().setAlignment(Qt.AlignCenter)
+	selectCR.addItems(['Choose Operation','CREATE','RESTORE'])
+	crMnemonic=QLineEdit()
+	crMnemonic.setFixedWidth(300)
+	crMnemonic.setPlaceholderText("word word word ...")
+	crWalletName=QLineEdit()
+	crWalletName.setFixedWidth(300)
+	crWalletName.setPlaceholderText("Enter the Wallets Name")
+	crWalletName.setValidator(regExPwordValidator)
+	crWalletPassword=QLineEdit()
+	crWalletPassword.setFixedWidth(300)
+	crWalletPassword.setEchoMode(QLineEdit.Password)
+	crWalletPassword.setPlaceholderText("Enter Wallet Password")
+	crWalletPassword.setValidator(regExPwordValidator)
+	crWalletPassphrase=QLineEdit()
+	crWalletPassphrase.setFixedWidth(300)
+	crWalletPassphrase.setEchoMode(QLineEdit.Password)
+	crWalletPassphrase.setPlaceholderText("Enter Recovery Passphrase")
+	crWalletPassphrase.setValidator(regExPwordValidator)
+	crWalletPasswordCheck=QLineEdit()
+	crWalletPasswordCheck.setFixedWidth(300)
+	crWalletPasswordCheck.setEchoMode(QLineEdit.Password)
+	crWalletPasswordCheck.setPlaceholderText("Password Check")
+	crWalletPassphraseCheck=QLineEdit()
+	crWalletPassphraseCheck.setFixedWidth(300)
+	crWalletPassphraseCheck.setEchoMode(QLineEdit.Password)
+	crWalletPassphraseCheck.setPlaceholderText("Passphrase Check")
+	hCRHeaderLayout=QHBoxLayout()
+	hCRHeaderLayout.addStretch(1)
+	hCRHeaderLayout.addWidget(crLogoLabel)
+	hCRHeaderLayout.setAlignment(Qt.AlignTop)
+	crFormLayout.addRow(crFormLayout.tr("&Create or Restore Wallet:"),selectCR)
+	crFormLayout.addRow(crFormLayout.tr("&Enter Recovery Words:"),crMnemonic)
+	crFormLayout.addRow(crFormLayout.tr("&Wallet Name:"),crWalletName)
+	crFormLayout.addRow(crFormLayout.tr("&Password:"),crWalletPassword)
+	crFormLayout.addRow(crFormLayout.tr("&Passphrase:"),crWalletPassphrase)
+	crFormLayout.addRow(crFormLayout.tr("&Re-Enter Password:"),crWalletPasswordCheck)
+	crFormLayout.addRow(crFormLayout.tr("&Re-Enter Passphrase:"),crWalletPassphraseCheck)
+	crWalletName.hide()
+	crWalletPassword.hide()
+	crWalletPassphrase.hide()
+	crWalletPasswordCheck.hide()
+	crWalletPassphraseCheck.hide()
+	crMnemonic.hide()
+	crFormLayout.labelForField(crWalletName).hide()
+	crFormLayout.labelForField(crWalletPassword).hide()
+	crFormLayout.labelForField(crWalletPassphrase).hide()
+	crFormLayout.labelForField(crWalletPasswordCheck).hide()
+	crFormLayout.labelForField(crWalletPassphraseCheck).hide()
+	crFormLayout.labelForField(crMnemonic).hide()
+	hCRFormLayout.addStretch(1)
+	hCRFormLayout.addLayout(crFormLayout)
+	hCRFormLayout.addStretch(1)
+	hCRFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
+	vCRLayout.addLayout(hCRHeaderLayout)
+	vCRLayout.addStretch(1)
+	vCRLayout.addLayout(hCRFormLayout)
+	vCRLayout.addStretch(1)
+	vCRLayout.addLayout(hCRButtonsLayout)
+	vCRLayout.addStretch(1)
+	createRestorePage.setLayout(vCRLayout)
+
 	mainWin.addWidget(stackedWidget)
 
 	msgBox=QMessageBox(parent=stackedWidget)
@@ -750,6 +1001,8 @@ if __name__ == '__main__':
 	displaySuccessSig=workSignal()
 	displayErrorSig=workSignal()
 	fireLoad=workSignal()
+	whichCRSig=workSignal()
+	dispCreateSuccessSig=workSignal()
 
 	loadThread=QThread()
 	loadThread.start()
@@ -773,11 +1026,18 @@ if __name__ == '__main__':
 	stopSpinSig.workDone.connect(stopSpin)
 	displaySuccessSig.workDone.connect(displaySuccess)
 	displayErrorSig.objSig.connect(displayError)
+	whichCRSig.objSig.connect(loadDashboard.crWalletWorker)
+	dispCreateSuccessSig.strSig.connect(displayCreate)
+	dispCreateSuccessSig.workDone.connect(displayRestore)
 
 	refreshTimer=QTimer()
 	refreshTimer.timeout.connect(updateTimer)
 	refreshTimer.start(1000)
 
+	clearCRButton.clicked.connect(clearCRForm)
+	cancelCRButton.clicked.connect(switchToWalletPage)
+	submitCRButton.clicked.connect(createRestoreDecision)
+	selectCR.currentIndexChanged.connect(crBuildForm)
 	selectStyleName.currentIndexChanged.connect(changeStyle)
 	settingsButton.clicked.connect(switchToSettingsPage)
 	defaultSettingsButton.clicked.connect(setDefaultSettings)
@@ -793,10 +1053,11 @@ if __name__ == '__main__':
 	homeButton.clicked.connect(switchToWalletPage)
 	clearWalletButton.clicked.connect(closeApp)
 	addressArea.mouseReleaseEvent=copyAddress
+	createRestoreLabel.linkActivated.connect(switchToCreateRestorePage)
 
 	walletName=""
 	walletParams={}
-	initWallets()
+	rebuildURLs(swagIP)
 
 	app.aboutToQuit.connect(closeThread)
 	app.exec_()
