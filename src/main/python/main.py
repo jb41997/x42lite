@@ -70,6 +70,18 @@ if __name__ == '__main__':
 					displayErrorSig.objSig.emit(["Network Error",e])
 
 		@Slot()
+		def getNodeStatus(self):
+			try:
+				statusSession=futuresSession.get(url=nodeStatusURL, timeout=5)
+				statusResult=statusSession.result()
+				statusResponseCode=statusResult.status_code
+				statusJson=statusResult.text
+				if statusJson and statusResponseCode==200:
+					nodeStatusSig.objSig.emit(statusJson)
+			except requests.exceptions.RequestException as e:
+				displayErrorSig.objSig.emit(["Node Not Running on "+swagIP,e])
+
+		@Slot()
 		def buildTransaction(self,txJson):
 			try:
 				buildTxSession=futuresSession.post(url=buildTxURL, timeout=30, json=txJson, hooks={'response':parseJson})				
@@ -322,6 +334,12 @@ if __name__ == '__main__':
 		selectWalletName.addItems(listOfWallets)
 		stopSpin()
 
+	@Slot()
+	def buildStatusArea(statusText):
+		statusArea.clear()
+		statusArea.setText(statusText)
+		stopSpin()
+
 	def initWallets():
 		startSpin()
 		initiateWalletSig.workDone.emit()
@@ -334,6 +352,13 @@ if __name__ == '__main__':
 		if len(copiedAddr) == 34:
 			addressArea.setTextCursor(addrCursor)
 			app.clipboard().setText(copiedAddr)
+
+
+	def switchToStatusPage():
+		statusArea.clear()
+		nodeStatusSig.workDone.emit()
+		stackedWidget.setCurrentIndex(5)
+		startSpin()
 
 	def switchToCreateRestorePage():
 		clearCRForm()
@@ -459,6 +484,7 @@ if __name__ == '__main__':
 		global mnemonicURL
 		global createWalletURL
 		global restoreWalletURL
+		global nodeStatusURL
 
 		swagIP=sIP
 		swaggerServer = "http://"+swagIP
@@ -472,6 +498,7 @@ if __name__ == '__main__':
 		mnemonicURL=swaggerServer+mnemonicEndpoint
 		createWalletURL=swaggerServer+createWalletEndpoint
 		restoreWalletURL=swaggerServer+restoreWalletEndpoint
+		nodeStatusURL=swaggerServer+nodeStatusEndpoint
 		switchToWalletPage()
 		initWallets()
 
@@ -504,6 +531,7 @@ if __name__ == '__main__':
 			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			crLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			createRestoreLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Create or Restore Wallet</a>")
+			statLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Node Status</a>")
 			waitSpin.setColor(QColor(255,255,255))
 		#Light
 		elif style==1:
@@ -515,9 +543,10 @@ if __name__ == '__main__':
 			walletLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			crLogoLabel.setPixmap(xImageBlack.scaledToHeight(45,Qt.SmoothTransformation))
 			createRestoreLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Create or Restore Wallet</a>")
+			statLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Node Status</a>")
 			waitSpin.setColor(QColor(71,23,246))
 		#Red
-		if style==2:
+		elif style==2:
 			cssStyle="<style>.amount-text {color: #FFFFFF;} .x-text {color: #C3073F;} .hyper-text{color:rgba(195,7,63,.5)}</style>"
 			stackedWidget.setStyleSheet("QStackedWidget {background-color:#1A1A1D; color: #979A9A;} QLabel{color: #979A9A;} QLabel#heading {color: #950740;} QMessageBox,QComboBox,QAbstractItemView {background-color: rgba(26, 26, 29, 1.0); color: #979A9A;} QLineEdit {background-color: rgba(26, 26, 29, 0.8); color: #979A9A; border:1px solid #000000;} QPushButton {background-color: #6F2232; background-image: none; color: #FFFFFF;} QPushButton::Hover {background-color: #950740;} QTextEdit {background-color: rgba(26, 26, 29, 0.7); color: #979A9A; border:1px solid #000000;} QScrollBar,QScrollBar::handle {background:rgba(26, 26, 29, 0.7); border:0px solid #000000;} QScrollBar::add-page,QScrollBar::sub-page,QScrollBar::add-line,QScrollBar::sub-line{background: none; border: none;}" )
 			logoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
@@ -526,6 +555,7 @@ if __name__ == '__main__':
 			walletLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			crLogoLabel.setPixmap(xImage.scaledToHeight(45,Qt.SmoothTransformation))
 			createRestoreLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Create or Restore Wallet</a>")
+			statLabel.setText(cssStyle+"<a href='#' class='hyper-text'>Node Status</a>")
 			hLine.setColor(QColor(111,34,50))
 			waitSpin.setColor(QColor(149,7,64))
 
@@ -620,6 +650,7 @@ if __name__ == '__main__':
 	mnemonicEndpoint='/api/Wallet/mnemonic'
 	createWalletEndpoint='/api/Wallet/create'
 	restoreWalletEndpoint='/api/Wallet/recover'
+	nodeStatusEndpoint='/api/Dashboard/Stats'
 
 	apiSession = requests.session()
 	futuresSession=FuturesSession()
@@ -643,12 +674,14 @@ if __name__ == '__main__':
 	sendPage=QWidget()
 	settingsPage=QWidget()
 	createRestorePage=QWidget()
+	nodeStatusPage=QWidget()
 	stackedWidget=QStackedWidget()
 	stackedWidget.addWidget(walletPage)
 	stackedWidget.addWidget(dashboardPage)
 	stackedWidget.addWidget(sendPage)
 	stackedWidget.addWidget(settingsPage)
 	stackedWidget.addWidget(createRestorePage)
+	stackedWidget.addWidget(nodeStatusPage)
 	
 	#Dashboard Page
 	geom = app.desktop().availableGeometry()
@@ -751,6 +784,8 @@ if __name__ == '__main__':
 	settingsButton.setStyleSheet("max-width: 80px; max-height: 30px;")
 	createRestoreLabel=QLabel()
 	createRestoreLabel.setAlignment(Qt.AlignBottom | Qt.AlignCenter)
+	statLabel=QLabel()
+	statLabel.setAlignment(Qt.AlignBottom | Qt.AlignLeft)
 	hWalletFormLayout=QHBoxLayout()
 	walletFormLayout=QFormLayout()
 	walletFormLayout.setLabelAlignment(Qt.AlignRight)
@@ -777,9 +812,9 @@ if __name__ == '__main__':
 	hWalletFormLayout.setAlignment(Qt.AlignCenter | Qt.AlignTop)
 	hWalletHeaderLayout.setAlignment(Qt.AlignTop)
 	hWalletFooterLayout=QHBoxLayout()
+	hWalletFooterLayout.addWidget(statLabel)
 	hWalletFooterLayout.addStretch(1)
 	hWalletFooterLayout.addWidget(createRestoreLabel)
-	hWalletFooterLayout.addStretch(1)
 	vWalletLayout.addLayout(hWalletHeaderLayout)
 	vWalletLayout.addStretch(1)
 	vWalletLayout.addLayout(hWalletFormLayout)
@@ -970,6 +1005,17 @@ if __name__ == '__main__':
 	vCRLayout.addStretch(1)
 	createRestorePage.setLayout(vCRLayout)
 
+	#Node Status Page
+	statusBackButton=QPushButton("Back")
+	statusBackButton.setStyleSheet("max-width: 80px; max-height: 30px;")
+	vStatusLayout=QVBoxLayout()
+	statusArea=QTextEdit()
+	statusArea.setReadOnly(1)
+	statusArea.setLineWrapMode(QTextEdit.NoWrap)
+	vStatusLayout.addWidget(statusArea)
+	vStatusLayout.addWidget(statusBackButton)
+	nodeStatusPage.setLayout(vStatusLayout)
+
 	mainWin.addWidget(stackedWidget)
 
 	msgBox=QMessageBox(parent=stackedWidget)
@@ -1003,12 +1049,15 @@ if __name__ == '__main__':
 	fireLoad=workSignal()
 	whichCRSig=workSignal()
 	dispCreateSuccessSig=workSignal()
+	nodeStatusSig=workSignal()
 
 	loadThread=QThread()
 	loadThread.start()
 	loadDashboard=backgroundOps()
 	loadDashboard.moveToThread(loadThread)
 	grabWalletSig.objSig.connect(populateWallets)
+	nodeStatusSig.objSig.connect(buildStatusArea)
+	nodeStatusSig.workDone.connect(loadDashboard.getNodeStatus)
 	initiateWalletSig.workDone.connect(loadDashboard.grabWalletName)
 	transactionSig.objSig.connect(loadDashboard.buildTransaction)
 	submitSendSig.objSig.connect(loadDashboard.finalSend)
@@ -1034,6 +1083,7 @@ if __name__ == '__main__':
 	refreshTimer.timeout.connect(updateTimer)
 	refreshTimer.start(1000)
 
+	statusBackButton.clicked.connect(switchToWalletPage)
 	clearCRButton.clicked.connect(clearCRForm)
 	cancelCRButton.clicked.connect(switchToWalletPage)
 	submitCRButton.clicked.connect(createRestoreDecision)
@@ -1054,6 +1104,7 @@ if __name__ == '__main__':
 	clearWalletButton.clicked.connect(closeApp)
 	addressArea.mouseReleaseEvent=copyAddress
 	createRestoreLabel.linkActivated.connect(switchToCreateRestorePage)
+	statLabel.linkActivated.connect(switchToStatusPage)
 
 	walletName=""
 	walletParams={}
