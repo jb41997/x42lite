@@ -4,7 +4,7 @@ This was initially developed to offer a quick dashboard view for a headless node
 
   *[Official X42](https://github.com/x42protocol/X42-FullNode)
   *[Headless setup](https://www.reddit.com/r/x42/comments/akp6lp/creating_a_headless_staking_node_on_ubuntu_1804/?utm_source=share&utm_medium=web2x)
-  *[Full-Node on RaspPi setup](https://www.reddit.com/r/x42/comments/catbin/raspberry_pi_3_build/?utm_source=share&utm_medium=web2x)
+  *[This Full-Node on RaspPi setup walkthrough](https://www.reddit.com/r/x42/comments/catbin/raspberry_pi_3_build/?utm_source=share&utm_medium=web2x)
 
 This project was developed using python v3.7.4 and PySide2 v5.12.3.  Built/packaged with [fbs](https://build-system.fman.io/manual/).
 
