@@ -8,7 +8,7 @@ This was initially developed to offer a quick dashboard view for a headless node
 
 This project was developed using python v3.7.4 and PySide2 v5.12.3.  Built/packaged with [fbs](https://build-system.fman.io/manual/).
 
-[Imgur](https://i.imgur.com/oMEJCTp.gifv)
+![x42lite Dashboard](https://i.imgur.com/oMEJCTp.gif)
 
 ## To Install:
 Simply download the appropriate installer for your platform from the [installers](https://github.com/jb41997/x42lite/tree/master/installers) directory.
